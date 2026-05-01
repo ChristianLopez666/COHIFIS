@@ -31,9 +31,13 @@ Luego abre: `http://localhost:8000`
 
 ## Notas
 
-- Los enlaces de WhatsApp usan el número de Vicky Redes/Campañas (`wa.me/5216681855146`) con mensajes prellenados diferenciados por bloque CTA para trazabilidad comercial.
-- El mensaje “hasta 40% de descuento” se mantiene condicionado a perfil, cobertura, aseguradora y condiciones de contratación.
+- Rutas WhatsApp por producto/campaña:
+  - Seguro Auto / SECOM -> Vicky SECOM: `https://wa.me/5216683211342`
+  - Vida Temporal, Préstamo IMSS, TPV, créditos empresariales y seguros empresariales -> Vicky Redes/Campañas: `https://wa.me/5216681855146`
+- Los enlaces de WhatsApp mantienen mensajes prellenados diferenciados por bloque CTA para trazabilidad comercial.
+- El mensaje “hasta 40% de descuento” se mantiene como beneficio condicionado a perfil, cobertura, aseguradora y condiciones de contratación.
 
-- El mensaje “hasta 40% de descuento” debe mostrarse con disclaimer completo de elegibilidad y sin garantía de precio/aprobación.
+## Gobernanza de copy promocional
 
-- Rutas WhatsApp por producto: Seguro Auto/SECOM -> Vicky SECOM (`wa.me/5216683211342`); resto de productos -> Vicky Redes/Campañas (`wa.me/5216681855146`).
+- Todo claim de descuento, promoción, comisión, beneficio o disponibilidad debe incluir disclaimer cercano y visible.
+- No se deben prometer precios, aprobación, descuentos garantizados ni disponibilidad.

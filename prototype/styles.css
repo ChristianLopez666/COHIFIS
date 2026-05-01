@@ -40,7 +40,7 @@ h1, h2, h3 { line-height: 1.2; margin: .3rem 0 .7rem; }
 .video-grid .card { min-height: 140px; display: flex; flex-direction: column; justify-content: center; }
 .footer { background: #122b4d; color: #e7edfa; padding: 1.2rem 0; margin-top: 2rem; }
 .footer a { color: #c9d8f5; text-decoration: none; }
-.disclaimer { font-size: .85rem; color: #7282a1; margin-top: .6rem; }
+.disclaimer { font-size: .9rem; line-height: 1.55; color: #5d6f90; margin-top: .6rem; }
 .float-wa {
   position: fixed; right: 16px; bottom: 16px; z-index: 50;
   background: #25d366; color: #073220; font-weight: 800;
