@@ -46,133 +46,59 @@ from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 
 # =============================================================================
-# IMPORTS BOARDROOM - compatibilidad boardroom/* y módulos root
-# =============================================================================
-try:
-    from boardroom.policy_envelope import (
-        Agent,
-        AuditBypassCounterScope,
-        AuditTimeoutAction,
-        Channel,
-        Criticality,
-        FallbackMode,
-        NotificationChannel,
-        PolicyEnvelope,
-        Source,
-        SystemOfRecord,
-        TaskType,
-    )
-    from boardroom.task import Task, TaskState
-    from boardroom.authority_matrix import (
-        AuthorityActor,
-        AuthorityEvent,
-        AuthorityEventType,
-        AuthorityLevel,
-        EscalationReason,
-        EventSeverity,
-    )
-    from boardroom.agent_contracts import AgentContractRegistry
-    from boardroom.activation_criteria import ActivationCriteriaEngine
-    from boardroom.fallback_manager import FallbackManager
-    from boardroom.notifier import BoardroomNotifier, NotificationConfig
-    from boardroom.valkey_store import (
-        AgentTraceRecord,
-        HealthMetricRecord,
-        InMemoryValkeyClient,
-        TraceStage,
-        TraceStatus,
-        ValkeyStore,
-        ValkeyStoreConfig,
-    )
-    from boardroom.sheets_ledger import (
-        LedgerIncident,
-        IncidentCode,
-        SheetsLedger,
-        SheetsLedgerConfig,
-        SheetsLedgerConfigurationError,
-    )
-    from boardroom.flow_gpt_claude import GPTClaudeFlow
-    from boardroom.flow_gemini_gpt_claude import GeminiGPTClaudeFlow
-    from boardroom.flow_gemma_decision_layer import GemmaDecisionLayerFlow
-    from boardroom.boardroom_acceptance import (
-        BoardroomAcceptanceRunner,
-        DELIVERABLE_NEEDS_CLARIFICATION,
-        DELIVERABLE_READY_FOR_AUDIT,
-        REVIEW_READY_THRESHOLD,
-    )
-except ImportError:
-    from policy_envelope import (
-        Agent,
-        AuditBypassCounterScope,
-        AuditTimeoutAction,
-        Channel,
-        Criticality,
-        FallbackMode,
-        NotificationChannel,
-        PolicyEnvelope,
-        Source,
-        SystemOfRecord,
-        TaskType,
-    )
-    from task import Task, TaskState
-    from authority_matrix import (
-        AuthorityActor,
-        AuthorityEvent,
-        AuthorityEventType,
-        AuthorityLevel,
-        EscalationReason,
-        EventSeverity,
-    )
-    from agent_contracts import AgentContractRegistry
-    from activation_criteria import ActivationCriteriaEngine
-    from fallback_manager import FallbackManager
-    from notifier import BoardroomNotifier, NotificationConfig
-    from valkey_store import (
-        AgentTraceRecord,
-        HealthMetricRecord,
-        InMemoryValkeyClient,
-        TraceStage,
-        TraceStatus,
-        ValkeyStore,
-        ValkeyStoreConfig,
-    )
-    from sheets_ledger import (
-        LedgerIncident,
-        IncidentCode,
-        SheetsLedger,
-        SheetsLedgerConfig,
-        SheetsLedgerConfigurationError,
-    )
-    from flow_gpt_claude import GPTClaudeFlow
-    from flow_gemini_gpt_claude import GeminiGPTClaudeFlow
-    from flow_gemma_decision_layer import GemmaDecisionLayerFlow
-    from boardroom_acceptance import (
-        BoardroomAcceptanceRunner,
-        DELIVERABLE_NEEDS_CLARIFICATION,
-        DELIVERABLE_READY_FOR_AUDIT,
-        REVIEW_READY_THRESHOLD,
-    )
-
-try:
-    import google.generativeai as genai  # type: ignore
-except ImportError:  # pragma: no cover - depende del entorno
-    genai = None
-
-try:
-    from google.oauth2 import service_account  # type: ignore
-    from googleapiclient.discovery import build  # type: ignore
-except ImportError:  # pragma: no cover - depende del entorno
-    service_account = None
-    build = None
-
-
-# =============================================================================
-# LOGGING
-# =============================================================================
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s %(levelname)s %(name)s %(message)s",
+# IMPORTS OPERATIVOS LOCALES
+from policy_envelope import (
+    Agent,
+    AuditBypassCounterScope,
+    AuditTimeoutAction,
+    Channel,
+    Criticality,
+    FallbackMode,
+    NotificationChannel,
+    PolicyEnvelope,
+    Source,
+    SystemOfRecord,
+    TaskType,
 )
+from task import Task, TaskState
+from authority_matrix import (
+    AuthorityActor,
+    AuthorityEvent,
+    AuthorityEventType,
+    AuthorityLevel,
+    EscalationReason,
+    EventSeverity,
+)
+from agent_contracts import AgentContractRegistry
+from activation_criteria import ActivationCriteriaEngine
+from fallback_manager import FallbackManager
+from notifier import BoardroomNotifier, NotificationConfig
+from valkey_store import (
+    AgentTraceRecord,
+    HealthMetricRecord,
+    InMemoryValkeyClient,
+    TraceStage,
+    TraceStatus,
+    ValkeyStore,
+    ValkeyStoreConfig,
+)
+from sheets_ledger import (
+    LedgerIncident,
+    IncidentCode,
+    SheetsLedger,
+    SheetsLedgerConfig,
+    SheetsLedgerConfigurationError,
+)
+from flow_gpt_claude import GPTClaudeFlow
+from flow_gemini_gpt_claude import GeminiGPTClaudeFlow
+from flow_gemma_decision_layer import GemmaDecisionLayerFlow
+import boardroom_acceptance as br_acceptance
+
+BoardroomAcceptanceRunner = br_acceptance.BoardroomAcceptanceRunner
+DELIVERABLE_NEEDS_CLARIFICATION = br_acceptance.DELIVERABLE_NEEDS_CLARIFICATION
+DELIVERABLE_READY_FOR_AUDIT = br_acceptance.DELIVERABLE_READY_FOR_AUDIT
+REVIEW_READY_THRESHOLD = br_acceptance.REVIEW_READY_THRESHOLD
+
 logger = logging.getLogger("cohifis.vicky")
 
 
@@ -204,6 +130,7 @@ class AppConfig:
     allowed_origins: Tuple[str, ...] = field(default_factory=tuple)
 
     whatsapp_api_token: str = field(default_factory=lambda: os.getenv("WHATSAPP_API_TOKEN", "").strip())
+    whatsapp_verify_token: str = field(default_factory=lambda: os.getenv("WHATSAPP_VERIFY_TOKEN", "").strip())
     whatsapp_phone_id: str = field(default_factory=lambda: os.getenv("WHATSAPP_PHONE_ID", "").strip())
     whatsapp_api_version: str = field(default_factory=lambda: os.getenv("WHATSAPP_API_VERSION", "v17.0").strip())
     admin_phone: str = field(default_factory=lambda: os.getenv("ADMIN_PHONE", "").strip())
@@ -230,6 +157,13 @@ class AppConfig:
 
     request_timeout_seconds: int = field(
         default_factory=lambda: int(os.getenv("REQUEST_TIMEOUT_SECONDS", "20"))
+    )
+    boardroom_engine_url: str = field(
+        default_factory=lambda: os.getenv("BOARDROOM_ENGINE_URL", "https://boardroom-engine.onrender.com/api/decision/process").strip()
+    )
+    boardroom_api_token: str = field(default_factory=lambda: os.getenv("BOARDROOM_API_TOKEN", "").strip())
+    boardroom_timeout_seconds: int = field(
+        default_factory=lambda: int(os.getenv("BOARDROOM_TIMEOUT_SECONDS", "15"))
     )
     memory_ttl_seconds: int = field(
         default_factory=lambda: int(os.getenv("MEMORY_TTL_SECONDS", str(30 * 24 * 60 * 60)))
@@ -276,9 +210,12 @@ class AppConfig:
                 sanitized_origins.append(normalized)
                 seen.add(normalized)
 
-        # Regla obligatoria de seguridad: siempre incluir dominio principal COHIFIS
+        # Regla obligatoria de seguridad: siempre incluir dominios oficiales COHIFIS
         if "https://cohifis.com.mx" not in seen:
             sanitized_origins.append("https://cohifis.com.mx")
+            seen.add("https://cohifis.com.mx")
+        if "https://cohifis-web.onrender.com" not in seen:
+            sanitized_origins.append("https://cohifis-web.onrender.com")
 
         self.allowed_origins = tuple(sanitized_origins)
 
@@ -1926,6 +1863,8 @@ def create_app(config: Optional[AppConfig] = None) -> Flask:
     def enforce_origin_policy() -> Optional[Any]:
         if request.method == "OPTIONS":
             return None
+        if request.path == "/api/whatsapp/webhook":
+            return None
         if request.path.startswith("/api/"):
             origin = request.headers.get("Origin")
             if not origin_is_allowed(origin, resolved_config):
@@ -1951,19 +1890,46 @@ def create_app(config: Optional[AppConfig] = None) -> Flask:
             return jsonify({"error": "JSON malformado"}), 400
 
         try:
-            response = service.handle_chat(
-                payload=payload,
-                origin=request.headers.get("Origin"),
-                remote_addr=request.remote_addr or "unknown",
-                user_agent=request.headers.get("User-Agent", ""),
+            message = str(payload.get("message", "")).strip()
+            context = payload.get("context") if isinstance(payload.get("context"), Mapping) else {}
+            telefono = str(context.get("phone", "") or context.get("customer_id", "")).strip()
+            interes = str(context.get("product_context", "") or context.get("segmento", "general")).strip() or "general"
+
+            outbound = {
+                "source": "cohifis_web",
+                "telefono": telefono,
+                "mensaje": message,
+                "interes": interes,
+            }
+            headers = {"Content-Type": "application/json"}
+            if resolved_config.boardroom_api_token:
+                headers["X-Boardroom-Token"] = resolved_config.boardroom_api_token
+                headers["Authorization"] = f"Bearer {resolved_config.boardroom_api_token}"
+
+            engine_response = requests.post(
+                resolved_config.boardroom_engine_url,
+                json=outbound,
+                headers=headers,
+                timeout=resolved_config.boardroom_timeout_seconds,
             )
-            return jsonify(response.to_dict()), 200
+            engine_payload = engine_response.json() if engine_response.content else {}
+            answer = ""
+            if isinstance(engine_payload, Mapping):
+                answer = str(engine_payload.get("answer") or engine_payload.get("response") or "").strip()
+            if not answer:
+                answer = (
+                    "Gracias por tu mensaje. Te puedo orientar sobre Seguro de Vida Temporal, "
+                    "coberturas y opciones según tu perfil. ¿Qué te gustaría revisar primero?"
+                )
+            return jsonify({"answer": answer}), 200
         except ValueError as exc:
             logger.warning("Error de validación chat: %s", exc)
             return jsonify({"error": str(exc)}), 400
         except Exception as exc:
-            logger.exception("Error no controlado en /api/v1/chat: %s", exc)
-            return jsonify({"error": "Error interno del servidor"}), 500
+            logger.exception("Error consultando Boardroom Engine en /api/v1/chat: %s", exc)
+            return jsonify({
+                "answer": "Hubo un problema temporal. Te puedo orientar en Seguro de Vida Temporal y ayudarte a cotizar por WhatsApp."
+            }), 200
 
     @app.route("/api/web-lead", methods=["POST", "OPTIONS"])
     @limiter.limit(resolved_config.rate_limit_lead)
@@ -1991,6 +1957,72 @@ def create_app(config: Optional[AppConfig] = None) -> Flask:
         except Exception as exc:
             logger.exception("Error no controlado en /api/web-lead: %s", exc)
             return jsonify({"error": "Error interno del servidor"}), 500
+
+    @app.route("/api/whatsapp/webhook", methods=["GET", "POST"])
+    def whatsapp_webhook() -> Any:
+        if request.method == "GET":
+            mode = request.args.get("hub.mode", "")
+            token = request.args.get("hub.verify_token", "")
+            challenge = request.args.get("hub.challenge", "")
+            if mode == "subscribe" and token and token == resolved_config.whatsapp_verify_token:
+                return challenge, 200
+            return jsonify({"error": "Verificación inválida"}), 403
+
+        payload = request.get_json(silent=True) or {}
+        try:
+            value = payload["entry"][0]["changes"][0]["value"]
+            messages = value.get("messages") or []
+            if not messages:
+                return jsonify({"status": "ignored"}), 200
+
+            message = messages[0]
+            phone = message.get("from", "")
+            text = (message.get("text") or {}).get("body", "")
+            if not phone or not text:
+                return jsonify({"status": "ignored"}), 200
+
+            chat_payload = {
+                "message": text,
+                "context": {
+                    "phone": phone,
+                    "customer_id": phone,
+                    "conversation_id": phone,
+                    "source_channel": "whatsapp",
+                    "metadata": {
+                        "source": "meta_whatsapp_webhook",
+                        "wa_message_id": message.get("id", ""),
+                    },
+                },
+            }
+            response = service.handle_chat(
+                payload=chat_payload,
+                origin=None,
+                remote_addr=request.remote_addr or "meta-webhook",
+                user_agent=request.headers.get("User-Agent", "meta-webhook"),
+            )
+            answer = response.answer
+        except Exception as exc:
+            logger.exception("Fallo en webhook WhatsApp, enviando fallback: %s", exc)
+            answer = (
+                "Gracias por escribirnos. Te ayudo con Seguro de Vida Temporal: "
+                "puedo orientarte en coberturas, plazos y cómo aplicar descuentos "
+                "según tu perfil. ¿Qué te gustaría revisar primero?"
+            )
+            try:
+                fallback_entry = (payload.get("entry") or [{}])[0]
+                fallback_change = (fallback_entry.get("changes") or [{}])[0]
+                fallback_value = fallback_change.get("value", {})
+                fallback_messages = fallback_value.get("messages")
+                if isinstance(fallback_messages, list) and fallback_messages:
+                    phone = str((fallback_messages[0] or {}).get("from", "")).strip()
+                else:
+                    phone = ""
+            except Exception:
+                phone = ""
+
+        if phone:
+            send_whatsapp_text(resolved_config, phone, answer)
+        return jsonify({"status": "processed"}), 200
 
     @app.errorhandler(404)
     def not_found_handler(_: Any) -> Any:
